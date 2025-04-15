@@ -1,0 +1,45 @@
+<div class="sidebar bg-dark text-white p-3">
+    <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <span class="fs-4">KM AI</span>
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="/" class="nav-link text-white {% if request.path == '/' %}active{% endif %}">
+                <i class="bi bi-upload me-2"></i>
+                Upload
+            </a>
+        </li>
+        <li>
+            <a href="/history/" class="nav-link text-white {% if request.path == '/history/' %}active{% endif %}">
+                <i class="bi bi-collection me-2"></i>
+                Histórico
+            </a>
+        </li>
+        <li>
+            <a href="/statistic/" class="nav-link text-white {% if request.path == '/statistic/' %}active{% endif %}">
+                <i class="bi bi-graph-up me-2"></i>
+                Estatísticas
+            </a>
+        </li>
+        <li>
+            <a href="/settings/" class="nav-link text-white {% if request.path == '/settings/' %}active{% endif %}">
+                <i class="bi bi-gear me-2"></i>
+                Configurações
+            </a>
+        </li>
+    </ul>
+    <hr>
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle me-2 fs-4"></i>
+            <strong>{% firstof request.user.get_username 'Usuário' %}</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="#">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configurações</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Sair</a></li>
+        </ul>
+    </div>
+</div>
