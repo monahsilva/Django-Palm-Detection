@@ -1,0 +1,181 @@
+{% extends 'counter/base.html' %}
+
+{% block title %}Histórico | KM AI{% endblock %}
+
+{% block extra_css %}
+.processing-card {
+    transition: all 0.3s ease;
+}
+.processing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.status-badge {
+    font-size: 0.75rem;
+}
+.pagination .page-item.active .page-link {
+    background-color: #212529;
+    border-color: #212529;
+}
+.pagination .page-link {
+    color: #212529;
+}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Histórico de Processamentos</h2>
+    {% if has_results %}
+    <div class="d-flex">
+        <div class="input-group me-3" style="width: 250px;">
+            <input type="text" class="form-control" placeholder="Pesquisar..." id="searchInput">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <select class="form-select" style="width: 180px;">
+            <option selected>Filtrar por status</option>
+            <option value="1">Completos</option>
+            <option value="2">Em processamento</option>
+            <option value="3">Com erro</option>
+        </select>
+    </div>
+    {% endif %}
+</div>
+
+{% if not has_results %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-database-exclamation fs-1 text-muted"></i>
+        <h3 class="mt-3">Sem dados processados</h3>
+        <p class="text-muted">Nenhum processamento foi realizado ainda.</p>
+        <a href="/" class="btn btn-primary mt-3">
+            <i class="bi bi-upload me-2"></i>Realizar primeiro upload
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <!-- Estatísticas Rápidas -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-uppercase">Total Processado</h6>
+                                <h2 class="mb-0">{{ total_count }}</h2>
+                            </div>
+                            <i class="bi bi-collection fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-uppercase">Palmeiras Detectadas</h6>
+                                <h2 class="mb-0">{{ total_palms }}</h2>
+                            </div>
+                            <i class="bi bi-tree fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-uppercase">Média por Imagem</h6>
+                                <h2 class="mb-0">{{ average }}</h2>
+                            </div>
+                            <i class="bi bi-calculator fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Imagem</th>
+                        <th>Data</th>
+                        <th>Palmeiras Detectadas</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr class="processing-card">
+                        <td>#{{ result.id }}</td>
+                        <td>
+                            <img src="{{ result.original_image.url }}" class="rounded" width="80" alt="Thumbnail">
+                        </td>
+                        <td>{{ result.processed_at|date:"d/m/Y H:i" }}</td>
+                        <td>{{ result.palm_count|default:"-" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if result.palm_count is not None %}bg-success
+                                {% else %}bg-warning text-dark{% endif %} status-badge">
+                                <i class="bi 
+                                    {% if result.palm_count is not None %}bi-check-circle
+                                    {% else %}bi-hourglass-split{% endif %} me-1"></i>
+                                {% if result.palm_count is not None %}Completo
+                                {% else %}Processando{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/api/results/{{ result.id }}/" class="btn btn-sm btn-outline-primary me-1" title="Visualizar">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-secondary me-1" title="Download">
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Próxima</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>

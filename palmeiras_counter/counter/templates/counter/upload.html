@@ -1,0 +1,177 @@
+<!-- counter/templates/counter/upload.html -->
+{% extends 'counter/base.html' %}
+
+{% block title %}Upload de Imagem | KM AI{% endblock %}
+
+{% block extra_css %}
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 5px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+.upload-area:hover {
+    border-color: #0d6efd;
+}
+#imagePreview {
+    max-width: 100%;
+    max-height: 300px;
+    margin-top: 20px;
+    display: none;
+}
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Upload de Imagem</h2>
+<p class="text-muted mb-4">Faça o upload da imagem para ser realizada a contagem de palmeiras através de IA.</p>
+
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-area" id="dropArea">
+                <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                <h5 class="my-3">Arraste e solte sua imagem aqui</h5>
+                <p class="text-muted">ou</p>
+                <input type="file" id="imageInput" name="image" accept="image/*" class="d-none" required>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('imageInput').click()">
+                    Selecione um arquivo
+                </button>
+            </div>
+            <img id="imagePreview" class="img-fluid rounded">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-send me-2"></i>Enviar para análise
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Resultados</h5>
+        <div id="result" class="mt-3"></div>
+    </div>
+</div>
+
+{% endblock %}
+<script>
+    // Preview da imagem selecionada
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Drag and drop
+    const dropArea = document.getElementById('dropArea');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropArea.classList.add('border-primary');
+        dropArea.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+    }
+
+    function unhighlight() {
+        dropArea.classList.remove('border-primary');
+        dropArea.style.backgroundColor = '';
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const file = dt.files[0];
+        document.getElementById('imageInput').files = dt.files;
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Form submission
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('imageInput');
+        
+        if (!fileInput.files.length) {
+            document.getElementById('result').innerHTML = `
+                <div class="alert alert-danger">Por favor, selecione uma imagem</div>
+            `;
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        
+        try {
+            document.getElementById('result').innerHTML = `
+                <div class="alert alert-info">Processando imagem...</div>
+            `;
+            
+            const response = await fetch('/api/upload/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-success">
+                        <h5>Imagem enviada com sucesso!</h5>
+                        <p>ID: ${data.image_id}</p>
+                        <a href="/api/results/${data.image_id}/" class="btn btn-sm btn-outline-success">
+                            Ver resultado detalhado
+                        </a>
+                    </div>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Erro no processamento</h5>
+                        <p>${data.error || 'Erro desconhecido'}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('result').innerHTML = `
+                <div class="alert alert-danger">
+                    <h5>Erro na comunicação</h5>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    });
+</script>
