@@ -125,3 +125,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Configurações adicionais
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# settings.py
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+# Configurações do modelo
+MODEL_CONFIG = {
+    'PATH': os.path.join(BASE_DIR, 'models', 'palm_counter_model.h5'), #os.makedirs(os.path.join(settings.MEDIA_ROOT, 'processed'), exist_ok=True)
+    'INPUT_SIZE': (256, 256),
+    'THRESHOLD': 0.5  # Threshold para considerar como palmeira
+}
